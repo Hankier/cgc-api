@@ -1,0 +1,6 @@
+cryptography==37.0.2
+psycopg2-binary==2.9.3
+python-dotenv==0.20.0
+requests==2.27.1
+sanic==22.3.2
+sanic-routing==22.3.0
