@@ -38,7 +38,7 @@ class Scrapper:
         LOGGER.info("Starting scrapping")
         query = "SELECT project_id, name, opensea FROM collections;"
         records = self._db.get_rows(query)
-        LOGGER.info(f'{records}')
+        LOGGER.info(f'LEN -> {len(records)}')
         for row in records:
             LOGGER.info(f'Getting -> {row["name"]}')
             status_ok, stats = self._os_api.get_collection_stats(row['opensea'])
@@ -50,8 +50,16 @@ class Scrapper:
                     floor = stats["floor_price"]
                 get_last = f'''SELECT total_sales, total_volume FROM stats WHERE collection = {row["project_id"]} ORDER BY date DESC LIMIT 1;'''
                 last_stats = self._db.get_rows(get_last)
-                diff_volume = stats['total_volume'] - float(last_stats[0]['total_volume'])
-                diff_sales = stats['total_sales'] - float(last_stats[0]['total_sales'])
+                LOGGER.debug(f'Last: {last_stats}')
+                try:
+                    diff_volume = stats['total_volume'] - float(last_stats[0]['total_volume'])
+                except IndexError:
+                    diff_volume = 0
+
+                try:
+                    diff_sales = stats['total_sales'] - float(last_stats[0]['total_sales'])
+                except IndexError:
+                    diff_sales = 0
 
                 query = f'''INSERT INTO stats (collection, supply, sales, total_sales, owners, count, reports, floor, volume, total_volume, date) 
                 VALUES ({row["project_id"]}, {stats["total_supply"]}, {diff_sales}, {stats["total_sales"]}, {stats["num_owners"]}, {stats["count"]}, {stats["num_reports"]}, {floor}, {diff_volume}, {stats["total_volume"]} ,current_timestamp)

@@ -1,11 +1,17 @@
+import logging
+import requests
+import time
+
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
+
 class OpenseaAPI():
     def __init__(self, config: dict) -> None:
         self.api = config['OPENSEA_API_URL']
         self.key = config['OPENSEA_API_KEY']
         self.collection_endpoint = 'collection'
-        self.stats_endpoint= 'stats'
 
-    def urljoin(*parts: str) -> str:
+    def urljoin(self, *parts: str) -> str:
         base = self.api
         for part in filter(None, parts):
             base = '{}/{}'.format(base.rstrip('/'), part.lstrip('/'))
@@ -29,8 +35,8 @@ class OpenseaAPI():
         LOGGER.info(f'Code {response.status_code} - {url}')
         return response.json()['collection']
 
-    def get_collection_stats(name):
-        url = self.urljoin(self.stats_endpoint, slug)
+    def get_collection_stats(self, slug: str):
+        url = self.urljoin(self.collection_endpoint, slug, 'stats')
         headers = {"X-API-KEY": self.key, "Accept": "application/json"}
         code = 429
         LOGGER.info(f'Code {code} - {url}')
@@ -38,7 +44,7 @@ class OpenseaAPI():
             response = requests.get(url, headers=headers)
             code = response.status_code
             if code == 429:
-                logger.info(f'gooing to sleep for 30')
+                LOGGER.info(f'gooing to sleep for 30')
                 time.sleep(30)
 
         if code == 200:
@@ -48,3 +54,4 @@ class OpenseaAPI():
             ok = False
             stats = None
 
+        return ok, stats
